@@ -1,0 +1,68 @@
+#+title: agent-janet
+#+author: Kevin Li
+
+* 简介
+- 目的: 收集当前仓库中所有 =agents.md= 并压缩为保留目录结构的 =agents.zip=，以及从压缩包中原位恢复这些文件。
+- 原理: 通过 =git ls-files= 获取被版本控制的文件列表(大小写不敏感匹配 =agents.md=)。若 git 不可用，则回退到本地目录递归扫描(忽略 =.git= 目录)。压缩/解压使用系统的 =zip/unzip= 工具。
+- 输出: 在仓库根目录生成/读取 =agents.zip=。
+
+* 快速开始
+** 依赖
+- Janet 1.30+
+- zip/unzip 命令(系统自带或已安装)
+- git(用于精确过滤受控文件)
+
+** 获取源码
+#+begin_src shell
+git clone <this-repo>
+cd agent-janet
+#+end_src
+
+** 直接运行
+#+begin_src shell
+# 打包受控 agents.md 到 agents.zip
+janet src/main.janet pack
+
+# 从 agents.zip 恢复所有 agents.md 到原路径
+janet src/main.janet restore
+
+# 可自定义压缩包路径
+janet src/main.janet pack my-agents.zip
+janet src/main.janet restore my-agents.zip
+#+end_src
+
+** 使用 jpm 构建/安装(可选)
+#+begin_src shell
+jpm build
+./build/janet-agent pack
+./build/janet-agent restore
+
+jpm install
+janet-agent pack
+janet-agent restore
+#+end_src
+
+* 基本用法
+- pack: 在当前工作目录查找 agents.md 并创建 =agents.zip=
+- restore: 从 =agents.zip= 解压到原始相对路径(覆盖同名文件)
+
+* 测试
+#+begin_src shell
+# 运行内置测试
+janet -e '(import "test/agents_test.janet" :as t) (t/run-tests)'
+#+end_src
+
+* 项目结构
+- `src/agent.janet`: 核心逻辑(查找/打包/恢复)
+- `src/main.janet`: CLI 入口
+- `test/agents_test.janet`: 单元测试
+
+* 已知局限
+- 依赖系统 `zip/unzip` 与 `git` 命令；若不可用将回退扫描但功能有限。
+- 仅处理文件名为 `agents.md`(大小写不敏感)。
+
+* 许可证
+- MIT
+
+* 贡献
+- 欢迎 Issue/PR。
