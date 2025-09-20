@@ -6,7 +6,8 @@
   (print "  restore -> extract agents.zip back to original paths"))
 
 (defn main [& args]
-  (match args
+  (pp (drop 1 args))
+  (match (drop 1 args)
     ["pack"] (agent/pack-agents)
     ["pack" zip] (agent/pack-agents zip)
     ["restore"] (agent/restore-agents)

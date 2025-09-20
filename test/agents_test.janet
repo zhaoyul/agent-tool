@@ -30,7 +30,7 @@
     res))
 
 # Test: pack and restore agents.md tracked by git
-(def tmp (path/abspath (path/join repo-root "build/test-pack-restore")))
+(def tmp (path/abspath (path/join repo-root "tmp-agents/test-pack-restore")))
 (os/shell (string "rm -rf '" tmp "'"))
 (os/shell (string "mkdir -p '" tmp "'"))
 
@@ -56,6 +56,29 @@
 
 ((exports :restore-agents))
 (each [p v] originals (assert-eq (read-file p) v (string "restored content for " p)))
+
+# Scenario 2: respect .gitignore directories at multiple levels
+(def tmp2 (path/abspath (path/join repo-root "tmp-agents/test-ignore")))
+(os/shell (string "rm -rf '" tmp2 "'"))
+(os/shell (string "mkdir -p '" tmp2 "'"))
+(os/cd tmp2)
+
+# .gitignore at root ignoring skipme/ and deep/ignored/
+(write-file ".gitignore" "skipme/\ndeep/ignored/\n")
+
+# Ignored files
+(write-file "skipme/agents.md" "ignored-1")
+(write-file "deep/ignored/agents.md" "ignored-2")
+
+# Not ignored
+(write-file "deep/ok/agents.md" "kept")
+(write-file "root/Agents.md" "kept2")
+
+(let [found ((exports :find-agents))]
+  (assert (not (some |(string/find $ "skipme/") found)) "ignored skipme/ directory")
+  (assert (not (some |(string/find $ "deep/ignored/") found)) "ignored deep/ignored/ directory")
+  (assert (some |(= $ "deep/ok/agents.md") found) "kept deep/ok/agents.md")
+  (assert (some |(= $ "root/Agents.md") found) "kept root/Agents.md"))
 
 (when (> (length fails) 0)
   (eprint (string "Failures: " (length fails)))
